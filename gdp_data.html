@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="d3.min.js"></script>
+<link rel='stylesheet' href='style.css'/>
+<script type='text/javascript' src='util.js'></script>
+<title>GDP</title>
+</head>
+<body>
+    <div class='container'>
+        <a href='crime_data.html'>Crime Data</a> <a href='gdp_data.html'>GDP Data</a>
+        <h1>Normal Horizontal Graphs</h1>
+        <div class='chart chart1'><h2>Population (2013)</h2></div>
+        <div class='chart chart2'><h2>GDP (2013)</h2></div>
+        <div class='chart chart3'><h2>Purchasing Power (2013)</h2></div>
+        <div style='clear:both'></div>
+    </div>
+    <div class='container'>
+        <h1>Stacked Bar Graphs</h1>
+        <div style='clear:both'></div>
+    </div>
+    <div class='container'>
+        <h1>Multiseries Line Graphs</h1>
+    </div>
+    <script>
+        d3.json('gdp_data.json', function(error, data) {
+            data = data['data'];
+            plotGdp(data,'.chart1', 'p', 'c', true);
+            plotGdp(data,'.chart2', 'g', 'c', true);
+            plotGdp(data,'.chart3', 'pp', 'c', true);
+        });
+    </script>
+</body>
+</html>

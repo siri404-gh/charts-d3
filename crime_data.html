@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="d3.min.js"></script>
+<link rel='stylesheet' href='style.css'/>
+<script type='text/javascript' src='util.js'></script>
+<title>Crime Data</title>
+</head>
+<body>
+    <div class='container'>
+        <a href='crime_data.html'>Crime Data</a> <a href='gdp_data.html'>GDP Data</a>
+        <h1>Normal Horizontal Graphs</h1>
+        <div class='chart chart1'><h2>Thefts</h2></div>
+        <div class='chart chart2'><h2>Thefts costing over 500$</h2></div>
+        <div class='chart chart3'><h2>Thefts costing Under 500$</h2></div>
+        <div class='chart chart4'><h2>Assaults</h2></div>
+        <div class='chart chart5'><h2>Assaults ending in arrest</h2></div>
+        <div class='chart chart6'><h2>Assaults not ending in arrest</h2></div>
+        <div style='clear:both'></div>
+    </div>
+    <div class='container'>
+        <h1>Stacked Bar Graphs</h1>
+        <div style='clear:both'></div>
+    </div>
+    <div class='container'>
+        <h1>Multiseries Line Graphs</h1>
+    </div>
+    </div>
+    <script>
+        var dataArray = [];
+        var theftValue = 'THEFT';
+        var assaultValue = 'ASSAULT';
+        var valueOver500 = 'OVER $500';
+        var valueUnder500 = '$500 AND UNDER';
+        var xScale = d3.scale.linear().domain([0, 100000]).range([0, 500]);
+
+        d3.json('crime_data.json', function(error, data) {
+            var data = data['data'];
+
+            var theftWidthFunc = function(d) {
+                return xScale( count(data, function(data) {
+                    return (data['t'] == theftValue && data['y'] == d)? true : false;
+                }) ) + "px";
+            };
+
+            var theftTextFunc = function(d) {
+                return count(data, function(data) {
+                    return (data['t'] == theftValue && data['y'] == d)? true : false;
+                })
+            };
+
+            var theftOver500Function = function(d) {
+                return xScale( count(data, function(data) {
+                    return (data['t'] == theftValue && data['y'] == d && data['v'] == valueOver500)? true : false;
+                }) ) + "px";
+            };
+
+            var theftOver500TextFunction = function(d) {
+                return count(data, function(data) {
+                    return (data['t'] == theftValue && data['y'] == d && data['v'] == valueOver500)? true : false;
+                })
+            };
+
+            var theftUnder500Function = function(d) {
+                return xScale( count(data, function(data) {
+                    return (data['t'] == assaultValue && data['y'] == d)? true : false;
+                }) ) + "px";
+            };
+
+            var theftUnder500TextFunction = function(d) {
+                return count(data, function(data) {
+                    return (data['t'] == assaultValue && data['y'] == d)? true : false;
+                })
+            };
+
+            var assaultWidthFunc = function(d) {
+                return xScale( count(data, function(data) {
+                    return (data['t'] == assaultValue && data['y'] == d)? true : false;
+                }) ) + "px";
+            };
+
+            var assaultWidthTextFunc = function(d) {
+                return count(data, function(data) {
+                    return (data['t'] == assaultValue && data['y'] == d)? true : false;
+                })
+            };
+
+            var assaultArrestWidthFunction = function(d) {
+                return xScale( count(data, function(data) {
+                    return (data['t'] == assaultValue && data['y'] == d && data['a'] == 'true')? true : false;
+                }) ) + "px";
+            };
+
+            var assaultArrestWidthTextFunction = function(d) {
+                return count(data, function(data) {
+                    return (data['t'] == assaultValue && data['y'] == d && data['a'] == 'true')? true : false;
+                })
+            };
+
+            var assaultNotArrestWidthFunction = function(d) {
+                return xScale( count(data, function(data) {
+                    return (data['t'] == assaultValue && data['y'] == d && data['a'] == 'false')? true : false;
+                }) ) + "px";
+            };
+
+            var assaultNotArrestWidthTextFunction =  function(d) {
+                return count(data,
+                    function(data) { return (data['t'] == assaultValue && data['y'] == d && data['a'] == 'false')? true : false;
+                });
+            };
+
+            plotCrime(data, '.chart1', 'y', theftWidthFunc, theftTextFunc);
+            plotCrime(data, '.chart2', 'y', theftOver500Function, theftOver500TextFunction);
+            plotCrime(data, '.chart3', 'y', theftUnder500Function, theftUnder500TextFunction);
+            plotCrime(data, '.chart4', 'y', assaultWidthFunc, assaultWidthTextFunc);
+            plotCrime(data, '.chart5', 'y', assaultArrestWidthFunction, assaultArrestWidthTextFunction);
+            plotCrime(data, '.chart6', 'y', assaultNotArrestWidthFunction, assaultNotArrestWidthTextFunction);
+        });
+    </script>
+</body>
+</html>

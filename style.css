@@ -1,0 +1,29 @@
+body {
+    font-family: arial;
+    font-size: 11px;
+}
+.container {
+    display: block;
+}
+.bar {
+  font-family: arial;
+  background: blue;
+  color: black;
+  font-size: 11px;
+  text-align: right;
+  padding: 5px 0;
+  margin-top: 5px;
+}
+.chart {
+  float: left;
+  border: solid 1px #ccc;
+  width: 500px;
+  margin: 10px;
+  text-align: center;
+  padding: 5px;
+  background: #f1f1f1;
+}
+.bar2 {
+  width: 100px;
+  background: blue;
+}
