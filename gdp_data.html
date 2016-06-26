@@ -3,17 +3,22 @@
 <head>
 <script src="d3.min.js"></script>
 <link rel='stylesheet' href='style.css'/>
-<script type='text/javascript' src='util.js'></script>
 <title>GDP</title>
 </head>
 <body>
     <div class='container'>
-        <a href='crime_data.html'>Crime Data</a> <a href='gdp_data.html'>GDP Data</a>
         <h1>Normal Horizontal Graphs</h1>
-        <div class='chart chart1'><h2>Population (2013)</h2></div>
-        <div class='chart chart2'><h2>GDP (2013)</h2></div>
-        <div class='chart chart3'><h2>Purchasing Power (2013)</h2></div>
+        <div class='chart chart1'>
+            <h2>Population (2013)</h2>
+        </div>
+        <div class='chart chart2'>
+            <h2>GDP (2013)</h2>
+        </div>
+        <div class='chart chart3'>
+            <h2>Purchasing Power (2013)</h2>
+        </div>
         <div style='clear:both'></div>
+
     </div>
     <div class='container'>
         <h1>Stacked Bar Graphs</h1>
@@ -24,7 +29,54 @@
     </div>
     <script>
         d3.json('gdp_data.json', function(error, data) {
+            if (error) throw error;
             data = data['data'];
+
+            var count = function(data, check) {
+                var counter = 0;
+                data.forEach(function(d) {
+                    counter += check(d);
+                });
+                return counter;
+            };
+
+            var sortFunc = function(data, parameter, desc) {
+                return data.sort(function(d, e) {
+                    if(desc) {
+                        if(parameter)
+                        return e[parameter] - d[parameter];
+                        return e - d;
+                    } else {
+                        if(parameter)
+                        return d[parameter] - d[parameter];
+                        return d - e;
+                    }
+                });
+            };
+
+            var plotGdp = function(data, className, parameter, text, sortOrder) {
+                var sortedData = sortFunc(data, parameter, sortOrder);
+                var dataArray = [];
+                sortedData.forEach(function(d, i) {
+                    dataArray.push(i);
+                });
+
+                var xScale = d3.scale.linear()
+                    .domain(d3.extent(sortedData, function(d) {return parseInt(d[parameter])}))
+                    .range([0, 500]);
+
+                d3.select(className+' .chartContainer').remove();
+                d3.select(className)
+                    .selectAll("div")
+                    .data(dataArray)
+                    .enter().append("div")
+                    .attr('class', 'bar')
+                    .style('width', function(d, i) { return xScale( sortedData[i][parameter] ) + "px"; })
+                    .text( function(d, i) { return  sortedData[i][text] });
+            };
+
+
+
             plotGdp(data,'.chart1', 'p', 'c', true);
             plotGdp(data,'.chart2', 'g', 'c', true);
             plotGdp(data,'.chart3', 'pp', 'c', true);
