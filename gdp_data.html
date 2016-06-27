@@ -7,25 +7,20 @@
 </head>
 <body>
     <div class='container'>
-        <h1>Normal Horizontal Graphs</h1>
         <div class='chart chart1'>
-            <h2>Population (2013)</h2>
+            <h2>GDP (2013)</h2>
         </div>
         <div class='chart chart2'>
-            <h2>GDP (2013)</h2>
+            <h2>Population (2013)</h2>
         </div>
         <div class='chart chart3'>
             <h2>Purchasing Power (2013)</h2>
         </div>
+        <div class='chart chart4'>
+            <h2>GDP Vs Continents</h2>
+        </div>
         <div style='clear:both'></div>
 
-    </div>
-    <div class='container'>
-        <h1>Stacked Bar Graphs</h1>
-        <div style='clear:both'></div>
-    </div>
-    <div class='container'>
-        <h1>Multiseries Line Graphs</h1>
     </div>
     <script>
         d3.json('gdp_data.json', function(error, data) {
@@ -54,32 +49,242 @@
                 });
             };
 
-            var plotGdp = function(data, className, parameter, text, sortOrder) {
-                var sortedData = sortFunc(data, parameter, sortOrder);
-                var dataArray = [];
-                sortedData.forEach(function(d, i) {
-                    dataArray.push(i);
-                });
+            /**************************************/
+            var sortedData = sortFunc(data, 'g', true);
 
-                var xScale = d3.scale.linear()
-                    .domain(d3.extent(sortedData, function(d) {return parseInt(d[parameter])}))
-                    .range([0, 500]);
+            var dataArray = [];
+            sortedData.forEach(function(d) {
+                dataArray.push(d.c);
+            });
 
-                d3.select(className+' .chartContainer').remove();
-                d3.select(className)
-                    .selectAll("div")
-                    .data(dataArray)
-                    .enter().append("div")
-                    .attr('class', 'bar')
-                    .style('width', function(d, i) { return xScale( sortedData[i][parameter] ) + "px"; })
-                    .text( function(d, i) { return  sortedData[i][text] });
+            var margin = {top: 20, right: 30, bottom: 30, left: 50},
+                width = 1400 - margin.left - margin.right,
+                height = 500 - margin.top - margin.bottom;
+
+            var x = d3.scale.ordinal().rangeRoundBands([0, width], .1);
+            var y = d3.scale.linear().range([height, 0]);
+
+            x.domain(dataArray);
+            y.domain([0,20000]);
+
+            var xAxis = d3.svg.axis()
+                .scale(x)
+                .orient("bottom");
+
+            var yAxis = d3.svg.axis()
+                .scale(y)
+                .orient("left");
+
+            var svg = d3.select('.chart1')
+                .append('svg')
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+
+            var chart = svg
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            chart.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
+
+            chart.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("GDP");
+
+            chart.selectAll(".barRect")
+                .data(data)
+                .enter().append("rect")
+                .attr("class", "barRect")
+                .attr("x", function(d) { return x(d.c); })
+                .attr("y", function(d) { return y(d.g); })
+                .attr("height", function(d) { return height-y(d.g); })
+                .attr("width", x.rangeBand());
+
+
+            /**************************************/
+
+            var sortedData = sortFunc(data, 'p', true);
+
+            var dataArray = [];
+            sortedData.forEach(function(d) { dataArray.push(d.c)})
+
+            x.domain(dataArray);
+            y.domain([0,1500]);
+
+            var svg = d3.select('.chart2')
+                .append('svg')
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+
+            var chart = svg
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            chart.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
+
+            chart.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Population in millions");
+
+            chart.selectAll(".barRect")
+                .data(sortedData)
+                .enter().append("rect")
+                .attr("class", "barRect")
+                .attr("x", function(d) { return x(d.c); })
+                .attr("y", function(d) { return y(d.p); })
+                .attr("height", function(d) { return height-y(d.p); })
+                .attr("width", x.rangeBand());
+
+            /**************************************/
+
+            var sortedData = sortFunc(data, 'pp', true);
+            var dataArray = [];
+            sortedData.forEach(function(d) { dataArray.push(d.c)});
+
+            x.domain(dataArray);
+            y.domain([0,20000]);
+
+            var svg = d3.select('.chart3')
+                .append('svg')
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+
+            var chart = svg
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            chart.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
+
+            chart.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Purchasing Power in millions");
+
+            chart.selectAll(".barRect")
+                .data(sortedData)
+                .enter().append("rect")
+                .attr("class", "barRect")
+                .attr("x", function(d) { return x(d.c); })
+                .attr("y", function(d) { return y(d.pp); })
+                .attr("height", function(d) { return height-y(d.pp); })
+                .attr("width", x.rangeBand());
+
+            /**************************************/
+            var sortedData = sortFunc(data, 'g', true);
+            var continents = {
+                'Asia': ['China', 'Japan', 'Russia', 'India', 'Republic Of Korea', 'Indonesia', 'Soudi Arabia'],
+                'Australia': ['Australia'],
+                'Europe': ['Germany', 'Italy', 'France', 'Turkey', 'United Kingdom'],
+                'Africa': ['South Africa'],
+                'North America': ['USA', 'Canada', 'Mexico'],
+                'South America' : ['Brazil','Argentina']
             };
 
+            var continentArray = [
+                {
+                    name: 'Asia',
+                    gdp: 0
+                },
+                {
+                    name: 'Australia',
+                    gdp: 0
+                },
+                {
+                    name: 'Europe',
+                    gdp: 0
+                },
+                {
+                    name: 'Africa',
+                    gdp: 0
+                },
+                {
+                    name: 'North America',
+                    gdp: 0
+                },
+                {
+                    name: 'South America',
+                    gdp: 0
+                }
+            ];
+
+            sortedData.forEach(function(data) {
+                var i = 0;
+                for(var c in continents) {
+                    if(continents[c].indexOf(data.c) !== -1) {
+                        continentArray[i]['gdp'] += parseInt(data.g);
+                    }
+                    i++;
+                }
+            });
+
+            var dataArray = [];
 
 
-            plotGdp(data,'.chart1', 'p', 'c', true);
-            plotGdp(data,'.chart2', 'g', 'c', true);
-            plotGdp(data,'.chart3', 'pp', 'c', true);
+            var continentArray = sortFunc(continentArray, 'gdp', true);
+            continentArray.forEach(function(cont) {
+                dataArray.push(cont.name);
+            });
+            x.domain(dataArray);
+            y.domain([0,20000]);
+
+            var svg = d3.select('.chart4')
+                .append('svg')
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+
+            var chart = svg
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            chart.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
+
+            chart.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Purchasing Power in millions");
+
+            chart.selectAll(".barRect")
+                .data(continentArray)
+                .enter().append("rect")
+                .attr("class", "barRect")
+                .attr("x", function(d) { return x(d.name); })
+                .attr("y", function(d) { return y(+d.gdp); })
+                .attr("height", function(d) { return height-y(+d.gdp); })
+                .attr("width", x.rangeBand());
+
         });
     </script>
 </body>

@@ -23,37 +23,37 @@
 
         <div class='chart'>
             <h1>Vertical SVG Graphs with Axes - Thefts</h1>
-            <svg class='chart4'></svg>
+            <div class='chart4'></div>
         </div>
 
         <div class='chart'>
             <h1>Vertical SVG Graphs with Axes - Assaults</h1>
-            <svg class='chart5'></svg>
+            <div class='chart5'></div>
         </div>
 
         <div class='chart'>
             <h1>Vertical SVG Graphs with Axes - Thefts valuing over 500$</h1>
-            <svg class='chart6'></svg>
+            <div class='chart6'></div>
         </div>
 
         <div class='chart'>
             <h1>Vertical SVG Graphs with Axes - Thefts valuing under 500$</h1>
-            <svg class='chart7'></svg>
+            <div class='chart7'></div>
         </div>
 
         <div class='chart'>
             <h1>Vertical SVG Graphs with Axes - Assaults resulting in arrests</h1>
-            <svg class='chart8'></svg>
+            <div class='chart8'></div>
         </div>
 
         <div class='chart'>
             <h1>Vertical SVG Graphs with Axes - Assaults not resulting in arrests</h1>
-            <svg class='chart9'></svg>
+            <div class='chart9'></div>
         </div>
 
         <div class='chart'>
             <h1>Stacked SVG Charts - Thefts</h1>
-            <svg class='chart10'></svg>
+            <div class='chart10'></div>
         </div>
     <script>
 
@@ -79,13 +79,13 @@
             });
         };
 
-
         d3.json('crime_data.json', function(error, data) {
 
             var dataArray = [];
             var xScale = d3.scale.linear().domain([0, 100000]).range([0, 500]);
             var data = data['data'];
-
+            var w = 500;
+            var h = 500;
             data.forEach(function(d) {
                 if (dataArray.indexOf(d.y) == -1) dataArray.push(d.y);
             });
@@ -128,22 +128,45 @@
                 });
             };
 
+            var cumulativeData = [];
+
+            dataArray.forEach(function(data) {
+                var singleObj = {
+                    year: data,
+                    theftTotal: theftCount(data),
+                    assaultTotal: assaultCount(data),
+                    over$500 : theftOver500Count(data),
+                    under$500 : theftUnder500Count(data),
+                    assaultArrest : assaultArrestCount(data),
+                    assaultNotArrest : assaultNotArrestCount(data),
+                    types: [
+                        {
+                            y0 : theftOver500Count(data),
+                            count : theftOver500Count(data)
+                        },
+                        {
+                            y0 : theftOver500Count(data) + theftUnder500Count(data),
+                            count : theftUnder500Count(data)
+                        }
+                    ]
+                };
+                cumulativeData.push(singleObj);
+            });
+
             /***********************************/
 
             d3.select('.chart1')
                 .selectAll("div")
-                .data(dataArray)
+                .data(cumulativeData)
                 .enter()
                 .append("div")
                 .attr('class', 'bar')
-                .style('width', function(d) { return xScale(theftCount(d))+'px'; })
-                .text( function(d) { return theftCount(d) });
+                .style('width', function(d) { return xScale(d.theftTotal)+'px'; })
+                .text( function(d) { return d.theftTotal });
 
             /***********************************/
 
-            var w = 500;
-            var h = 500;
-
+            var theftScale = d3.scale.linear().domain(d3.extent(cumulativeData, function(d) {return d.theftTotal;})).range([10,w]);
             var svg = d3.select('.chart2')
                 .append('svg')
                 .attr('width', w)
@@ -152,15 +175,17 @@
             dy = h/dataArray.length;
 
             var bars = svg.selectAll(".bar")
-        		.data(dataArray)
+        		.data(cumulativeData)
         		.enter()
         		.append("rect")
-        		.attr("y", function(d, i) {return dy*i;})
         		.attr("x", function(d, i) {return 0;})
-        		.attr("width", function(d) { return xScale(theftCount(d))+'px'; })
+        		.attr("y", function(d, i) {return dy*i;})
+        		.attr("width", function(d) { return theftScale(d.theftTotal)+'px'; })
         		.attr("height", function(d) { return '25px'; });
 
             /***********************************/
+
+            var theftScale = d3.scale.linear().domain(d3.extent(cumulativeData, function(d) {return d.theftTotal;})).range([10,h]);
 
             var svg = d3.select('.chart3')
                 .append('svg')
@@ -170,13 +195,13 @@
             dx = w/dataArray.length;
 
             var bars = svg.selectAll(".bar")
-        		.data(dataArray)
+        		.data(cumulativeData)
         		.enter()
         		.append("rect")
         		.attr("x", function(d, i) {return dx*i;})
-        		.attr("y", function(d, i) {return h-xScale(theftCount(d));})
+        		.attr("y", function(d, i) {return h - theftScale(d.theftTotal);})
         		.attr("width", dx-4)
-        		.attr("height", function(d) { return xScale(theftCount(d))+'px'; });
+        		.attr("height", function(d) { return theftScale(d.theftTotal)+'px'; });
 
             /***********************************/
 
@@ -198,11 +223,14 @@
                 .scale(y)
                 .orient("left");
 
-            /****/
+            /***********************************/
 
-            var chart = d3.select("svg.chart4")
+            var svg = d3.select(".chart4")
+                .append("svg")
                 .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
+                .attr("height", height + margin.top + margin.bottom);
+
+            var chart = svg
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -221,21 +249,23 @@
                 .style("text-anchor", "end")
                 .text("Thefts");
 
-
             chart.selectAll(".barRect")
-                .data(dataArray)
+                .data(cumulativeData)
                 .enter().append("rect")
                 .attr("class", "barRect")
-                .attr("x", function(d) { return x(d); })
-                .attr("y", function(d) { return y(theftCount(d)); })
-                .attr("height", function(d) { return height - y(theftCount(d)); })
+                .attr("x", function(d) { return x(d.year); })
+                .attr("y", function(d) { return y(d.theftTotal); })
+                .attr("height", function(d) { return height - y(d.theftTotal); })
                 .attr("width", x.rangeBand());
 
-            /****/
+            /***********************************/
 
-            var chart = d3.select("svg.chart5")
+            var svg = d3.select(".chart5")
+                .append("svg")
                 .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
+                .attr("height", height + margin.top + margin.bottom);
+
+            var chart = svg
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -255,19 +285,22 @@
                 .text("Assaults");
 
             chart.selectAll(".barRect")
-                .data(dataArray)
+                .data(cumulativeData)
                 .enter().append("rect")
                 .attr("class", "barRect")
-                .attr("x", function(d) { return x(d); })
-                .attr("y", function(d) { return y(assaultCount(d)); })
-                .attr("height", function(d) { return height - y(assaultCount(d)); })
+                .attr("x", function(d) { return x(d.year); })
+                .attr("y", function(d) { return y(d.assaultTotal); })
+                .attr("height", function(d) { return height - y(d.assaultTotal); })
                 .attr("width", x.rangeBand());
 
-            /****/
+            /***********************************/
 
-            var chart = d3.select("svg.chart6")
+            var svg = d3.select(".chart6")
+                .append("svg")
                 .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
+                .attr("height", height + margin.top + margin.bottom);
+
+            var chart = svg
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -287,19 +320,22 @@
                 .text("Theft valuing over $500");
 
             chart.selectAll(".barRect")
-                .data(dataArray)
+                .data(cumulativeData)
                 .enter().append("rect")
                 .attr("class", "barRect")
-                .attr("x", function(d) { return x(d); })
-                .attr("y", function(d) { return y(theftOver500Count(d)); })
-                .attr("height", function(d) { return height - y(theftOver500Count(d)); })
+                .attr("x", function(d) { return x(d.year); })
+                .attr("y", function(d) { return y(d.over$500); })
+                .attr("height", function(d) { return height - y(d.over$500); })
                 .attr("width", x.rangeBand());
 
-            /****/
+            /***********************************/
 
-            var chart = d3.select("svg.chart7")
+            var svg = d3.select(".chart7")
+                .append("svg")
                 .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
+                .attr("height", height + margin.top + margin.bottom);
+
+            var chart = svg
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -319,19 +355,22 @@
                 .text("Theft valuing under $500");
 
             chart.selectAll(".barRect")
-                .data(dataArray)
+                .data(cumulativeData)
                 .enter().append("rect")
                 .attr("class", "barRect")
-                .attr("x", function(d) { return x(d); })
-                .attr("y", function(d) { return y(theftUnder500Count(d)); })
-                .attr("height", function(d) { return height - y(theftUnder500Count(d)); })
+                .attr("x", function(d) { return x(d.year); })
+                .attr("y", function(d) { return y(d.under$500); })
+                .attr("height", function(d) { return height - y(d.under$500); })
                 .attr("width", x.rangeBand());
 
-            /****/
+            /***********************************/
 
-            var chart = d3.select("svg.chart8")
+            var svg = d3.select(".chart8")
+                .append("svg")
                 .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
+                .attr("height", height + margin.top + margin.bottom);
+
+            var chart = svg
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -351,19 +390,22 @@
                 .text("Assaults resulting in arrests");
 
             chart.selectAll(".barRect")
-                .data(dataArray)
+                .data(cumulativeData)
                 .enter().append("rect")
                 .attr("class", "barRect")
-                .attr("x", function(d) { return x(d); })
-                .attr("y", function(d) { return y(assaultArrestCount(d)); })
-                .attr("height", function(d) { return height - y(assaultArrestCount(d)); })
+                .attr("x", function(d) { return x(d.year); })
+                .attr("y", function(d) { return y(d.assaultArrest); })
+                .attr("height", function(d) { return height - y(d.assaultArrest); })
                 .attr("width", x.rangeBand());
 
-            /****/
+            /***********************************/
 
-            var chart = d3.select("svg.chart9")
+            var svg = d3.select(".chart9")
+                .append("svg")
                 .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
+                .attr("height", height + margin.top + margin.bottom);
+
+            var chart = svg
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -383,108 +425,73 @@
                 .text("Assaults not resulting in arrests");
 
             chart.selectAll(".barRect")
-                .data(dataArray)
+                .data(cumulativeData)
                 .enter().append("rect")
                 .attr("class", "barRect")
-                .attr("x", function(d) { return x(d); })
-                .attr("y", function(d) { return y(assaultNotArrestCount(d)); })
-                .attr("height", function(d) { return height - y(assaultNotArrestCount(d)); })
+                .attr("x", function(d) { return x(d.year); })
+                .attr("y", function(d) { return y(d.assaultNotArrest); })
+                .attr("height", function(d) { return height - y(d.assaultNotArrest); })
                 .attr("width", x.rangeBand());
 
-            /****/
-
-            var newData = [];
-
-            var margin = {top: 20, right: 20, bottom: 30, left: 40},
-                width = 960 - margin.left - margin.right,
-                height = 500 - margin.top - margin.bottom;
-
-                dataArray.forEach(function(d) {
-                    var a = {};
-                    a.year = d,
-                    a.types = [
-                        {y : 100000 - theftOver500Count(d),
-                         height : theftOver500Count(d)},
-                        {y : 100000 - theftUnder500Count(d) - theftOver500Count(d),
-                         height : theftUnder500Count(d)}
-                    ];
-                    newData.push(a);
-                });
-
-            var x = d3.scale.ordinal().rangeRoundBands([0, width], .1);
-            var y = d3.scale.linear().rangeRound([0, height]);
-
-            var color = d3.scale.ordinal().range(["#98abc5", "#8a89a6"]);
-
-            var xAxis = d3.svg.axis()
-                .scale(x)
-                .orient("bottom");
-
-            var yAxis = d3.svg.axis()
-                .scale(y)
-                .orient("left")
-                .tickFormat(d3.format(".2s"));
-
-            var svg = d3.select("svg.chart10")
+            /***********************************/
+            var svg = d3.select(".chart10")
+                 .append('svg')
                 .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
+                .attr("height", height + margin.top + margin.bottom);
+
+            var chart = svg
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-              color.domain(['Theft Over $500','Theft Under $500']);
+            chart.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
 
+            chart.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Thefts");
 
-              x.domain(dataArray);
-              y.domain([0, 100000]);
+            var color = d3.scale.ordinal().range(["#98abc5", "#8a89a6"]);
 
-              svg.append("g")
-                  .attr("class", "x axis")
-                  .attr("transform", "translate(0," + height + ")")
-                  .call(xAxis);
+            var year = chart.selectAll(".year")
+                .data(cumulativeData)
+                .enter().append("g")
+                .attr("class", "g")
+                .attr("transform", function(d, i) { return "translate(" + x(d.year) + ",0)"; });
 
-              svg.append("g")
-                  .attr("class", "y axis")
-                  .call(yAxis)
-                  .append("text")
-                  .attr("transform", "rotate(-90)")
-                  .attr("y", 6)
-                  .attr("dy", ".71em")
-                  .style("text-anchor", "end")
-                  .text("Theft Cases");
+            year.selectAll("rect")
+                .data(function(d) {return d.types;})
+                .enter().append("rect")
+                .attr("width", x.rangeBand())
+                .attr("y", function(d, i) {return y(d.y0);})
+                .attr("height", function(d, i) { return height - y(d.count);})
+                .style("fill", function(d, i) { return color(i); });
 
-              var year = svg.selectAll(".year")
-                  .data(newData)
-                  .enter().append("g")
-                  .attr("class", "g")
-                  .attr("transform", function(d, i) { return "translate(" + x(d.year) + ",0)"; });
+            var legend = svg.selectAll(".legend")
+                .data(['Theft Over $500','Theft Under $500'])
+                .enter().append("g")
+                .attr("class", "legend")
+                .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
 
-              year.selectAll("rect")
-                  .data(function(d) { return d.types;})
-                  .enter().append("rect")
-                  .attr("width", x.rangeBand())
-                  .attr("y", function(d, i) { return y(d.y);})
-                  .attr("height", function(d, i) { return (y(d.height));})
-                  .style("fill", function(d, i) { return color(i); });
+            legend.append("rect")
+                .attr("x", width - 18)
+                .attr("width", 18)
+                .attr("height", 18)
+                .style("fill", color);
 
-              var legend = svg.selectAll(".legend")
-                  .data(['Theft Over $500','Theft Under $500'])
-                  .enter().append("g")
-                  .attr("class", "legend")
-                  .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
-
-              legend.append("rect")
-                  .attr("x", width - 18)
-                  .attr("width", 18)
-                  .attr("height", 18)
-                  .style("fill", color);
-
-              legend.append("text")
-                  .attr("x", width - 24)
-                  .attr("y", 9)
-                  .attr("dy", ".35em")
-                  .style("text-anchor", "end")
-                  .text(function(d) { return d; });
-
+            legend.append("text")
+                .attr("x", width - 24)
+                .attr("y", 9)
+                .attr("dy", ".35em")
+                .style("text-anchor", "end")
+                .text(function(d) { return d; });
         });
     </script>
 </body>
